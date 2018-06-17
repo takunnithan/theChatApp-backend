@@ -5,10 +5,11 @@ import datetime
 class User(models.Model):
     username = models.CharField(max_length=20)
     password = models.CharField(max_length=20)
-    uuuid = models.IntegerField(primary_key=True)
+    uuid = models.IntegerField(primary_key=True)
 
 class Profile(models.Model):
-    uuid = models.ForeignKey(User, on_delete=models.CASCADE)
+    uuid = models.OneToOneField(User, primary_key=True, on_delete=models.DO_NOTHING)
+    username = models.CharField(max_length=20, null=False)
     full_name = models.CharField(max_length=50)
     avatar = models.CharField(max_length=50)
     settings = models.TextField()
@@ -17,7 +18,9 @@ class Profile(models.Model):
 class Message(models.Model):
     unique_hash = models.CharField(max_length=10)
     created_at = models.DateTimeField()
-    sender = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    sender = models.ForeignKey(Profile, on_delete=models.DO_NOTHING)
+    message = models.TextField(default='')
+
 
 class UserChatMapping(models.Model):
     user_one = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='user_one')

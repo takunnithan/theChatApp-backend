@@ -20,7 +20,8 @@ from backend_api import views
 from django.conf.urls import include
 
 router = routers.DefaultRouter()
-router.register(r'messages', views.MessageViewSet)
+router.register(r'chat/(?P<message_hash>[A-Z 0-9]+)', views.MessageListViewSet, base_name='messages')
+router.register(r'messages', views.MessageViewSet, base_name='messages')
 
 urlpatterns = [
     url('admin/', admin.site.urls),
