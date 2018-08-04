@@ -1,6 +1,13 @@
 from rest_framework import viewsets
 from backend_api.serializers import MessageSerializer, ChatSerializer
 from backend_api.models import Message
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication 
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+
+    def enforce_csrf(self, request):
+        return  # To not perform the csrf check previously happening
+
 
 class MessageListViewSet(viewsets.ModelViewSet):
     serializer_class = ChatSerializer
@@ -11,3 +18,5 @@ class MessageListViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     queryset = Message.objects.all()
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+
