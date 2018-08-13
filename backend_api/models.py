@@ -13,11 +13,11 @@ class Profile(models.Model):
     full_name = models.CharField(max_length=50)
     avatar = models.CharField(max_length=50)
     settings = models.TextField()
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
 class Message(models.Model):
     unique_hash = models.CharField(max_length=10)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
     sender = models.ForeignKey(Profile, on_delete=models.DO_NOTHING)
     message = models.TextField(default='')
 
@@ -26,13 +26,13 @@ class UserChatMapping(models.Model):
     user_one = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='user_one')
     user_two = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='user_two')
     unique_hash =models.CharField(max_length=10)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
 class Group(models.Model):
     unique_hash = models.CharField(max_length=10)
     avatar = models.CharField(max_length=50)
     settings = models.TextField()
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
     group_name = models.TextField()
 
 class GroupUserMapping(models.Model):
