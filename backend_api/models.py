@@ -28,6 +28,9 @@ class UserChatMapping(models.Model):
     unique_hash =models.CharField(max_length=10)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ('user_one', 'user_two',)
+
 class Group(models.Model):
     unique_hash = models.CharField(max_length=10)
     avatar = models.CharField(max_length=50)

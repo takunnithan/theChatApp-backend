@@ -1,7 +1,8 @@
 from rest_framework import viewsets
-from backend_api.serializers import MessageSerializer, ChatSerializer, GroupSerializer
-from backend_api.models import Message, Group, GroupUserMapping
+from backend_api.serializers import MessageSerializer, ChatSerializer, GroupSerializer, DirectChatSerializer
+from backend_api.models import Message, Group, GroupUserMapping, UserChatMapping
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication 
+from django.db.models import Q
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
 
@@ -26,3 +27,12 @@ class GroupListViewSet(viewsets.ModelViewSet):
         group_ids = GroupUserMapping.objects.filter(user_id=self.request.GET.get('user_id')).values_list('group_id')
         groups = Group.objects.filter(id__in=group_ids)
         return groups
+
+
+class DirectChatListViewSet(viewsets.ModelViewSet):
+    serializer_class = DirectChatSerializer
+    def get_queryset(self):
+        user_chat_mappings = UserChatMapping.objects.filter(
+                Q(user_one=self.request.GET.get('user_id')) |
+                Q(user_two=self.request.GET.get('user_id')))
+        return user_chat_mappings
