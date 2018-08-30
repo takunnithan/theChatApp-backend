@@ -3,11 +3,10 @@ from .models import Message, Group, UserChatMapping, User
 
 class ChatSerializer(serializers.ModelSerializer):
     sender = serializers.CharField(source='sender.username')
-    uuid = serializers.IntegerField(source='sender.uuid.uuid')
     avatar = serializers.URLField(source='sender.avatar')
     class Meta:
         model = Message
-        fields = ('id', 'created_at', 'sender', 'message', 'unique_hash', 'uuid', 'avatar')
+        fields = ('id', 'created_at', 'sender', 'message', 'unique_hash', 'avatar')
 
 
 class MessageSerializer(serializers.ModelSerializer):
