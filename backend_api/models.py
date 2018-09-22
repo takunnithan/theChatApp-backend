@@ -1,11 +1,13 @@
 from django.db import models
+from django.contrib.auth.base_user import AbstractBaseUser
 import datetime
 
 
-class User(models.Model):
+class User(AbstractBaseUser):
     username = models.CharField(max_length=20)
     password = models.CharField(max_length=20)
     uuid = models.IntegerField(primary_key=True)
+    USERNAME_FIELD = 'uuid'
 
 class Profile(models.Model):
     uuid = models.OneToOneField(User, primary_key=True, on_delete=models.DO_NOTHING)

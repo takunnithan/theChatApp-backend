@@ -3,13 +3,15 @@ from backend_api.serializers import MessageSerializer, ChatSerializer, GroupSeri
 from backend_api.models import Message, Group, GroupUserMapping, UserChatMapping, User, UserSession
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication 
 from django.db.models import Q
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from django.http import HttpResponse
 import os, base64
 import time
 import json
 from datetime import datetime, timedelta
+from backend_api.auth.custom_auth import CustomSessionAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
 
@@ -19,6 +21,8 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 
 class ChatListViewSet(viewsets.ModelViewSet):
     serializer_class = ChatSerializer
+    authentication_classes = (CustomSessionAuthentication,)
+    permission_classes = (IsAuthenticated,)
     def get_queryset(self):
         messages = Message.objects.filter(unique_hash=self.kwargs['message_hash'])
         return messages
@@ -26,10 +30,13 @@ class ChatListViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     queryset = Message.objects.all()
-    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+    authentication_classes = (CustomSessionAuthentication, CsrfExemptSessionAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
 class GroupListViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
+    authentication_classes = (CustomSessionAuthentication,)
+    permission_classes = (IsAuthenticated,)
     def get_queryset(self):
         group_ids = GroupUserMapping.objects.filter(user_id=self.request.GET.get('user_id')).values_list('group_id')
         groups = Group.objects.filter(id__in=group_ids)
@@ -38,6 +45,8 @@ class GroupListViewSet(viewsets.ModelViewSet):
 
 class DirectChatListViewSet(viewsets.ModelViewSet):
     serializer_class = DirectChatSerializer
+    authentication_classes = (CustomSessionAuthentication,)
+    permission_classes = (IsAuthenticated,)
     def get_queryset(self):
         user_chat_mappings = UserChatMapping.objects.filter(
                 Q(user_one=self.request.GET.get('user_id')) |
@@ -46,6 +55,8 @@ class DirectChatListViewSet(viewsets.ModelViewSet):
 
 
 @api_view(['POST'])
+@authentication_classes(())
+@permission_classes(())
 def login(request):
     username = request.data.get('username')
     password = request.data.get('password')
