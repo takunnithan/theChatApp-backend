@@ -1,7 +1,6 @@
 from rest_framework import viewsets
 from backend_api.serializers import MessageSerializer, ChatSerializer, GroupSerializer, DirectChatSerializer
-from backend_api.models import Message, Group, GroupUserMapping, UserChatMapping, User, UserSession
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication 
+from backend_api.models import Message, Group, GroupUserMapping, UserChatMapping, User, UserSession 
 from django.db.models import Q
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
@@ -10,13 +9,8 @@ import os, base64
 import time
 import json
 from datetime import datetime, timedelta
-from backend_api.auth.custom_auth import CustomSessionAuthentication
+from backend_api.auth.custom_auth import CustomSessionAuthentication, CsrfExemptSessionAuthentication
 from rest_framework.permissions import IsAuthenticated
-
-class CsrfExemptSessionAuthentication(SessionAuthentication):
-
-    def enforce_csrf(self, request):
-        return  # To not perform the csrf check previously happening
 
 
 class ChatListViewSet(viewsets.ModelViewSet):

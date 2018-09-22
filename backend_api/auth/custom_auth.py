@@ -1,6 +1,7 @@
 from rest_framework import authentication
 from rest_framework import exceptions
 from backend_api.models import UserSession, User
+from rest_framework.authentication import SessionAuthentication
 import time
 
 class CustomSessionAuthentication(authentication.BaseAuthentication):
@@ -24,3 +25,9 @@ class CustomSessionAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed('No such user')
         
         return (user, None)
+
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+
+    def enforce_csrf(self, request):
+        return  # To not perform the csrf check previously happening

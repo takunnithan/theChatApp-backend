@@ -6,7 +6,7 @@ import datetime
 class User(AbstractBaseUser):
     username = models.CharField(max_length=20)
     password = models.CharField(max_length=20)
-    uuid = models.IntegerField(primary_key=True)
+    uuid = models.CharField(max_length=20, primary_key=True)
     USERNAME_FIELD = 'uuid'
 
 class Profile(models.Model):
