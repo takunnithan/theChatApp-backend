@@ -55,25 +55,43 @@ def login(request):
     username = request.data.get('username')
     password = request.data.get('password')
     # csrf_token = request.data.get('x-csrf')
-    if username and password:
+    try:
         user = User.objects.filter(username=username).get()
-        if not user:
-            return Response("User doesn't exist")
-        if user.password == password:
-            session_token = base64.b64encode(os.urandom(50)).decode("utf-8")
-            data = {
-                'user_id': user.uuid,
-                'token': session_token,
-                'entry_timestamp': int(time.time())
-            }
-            # Delete the existing session
-            UserSession.objects.filter(user_id=user.uuid).delete()
-            # Create a new session
-            session_object = UserSession.objects.create(**data)
-            response = HttpResponse('Login success!')
-            session_validity = datetime.utcnow()+timedelta(days=5)
-            response.set_cookie(key='sessonid', value=session_token, expires=session_validity, httponly=True)
-            return response
-        else:
-            return Response("Either Username / Password doesn't match!")
-    return Response("Not enough data")
+    except Exception as e:
+        return HttpResponse(
+            json.dumps(
+                {'login_success': False,
+                'reason': "username {} doesn't exist".format(username)
+                }),
+            content_type="application/json",
+            status=400)
+    if user.password == password:
+        session_token = base64.b64encode(os.urandom(50)).decode("utf-8")
+        data = {
+            'user_id': user.uuid,
+            'token': session_token,
+            'entry_timestamp': int(time.time())
+        }
+        # Delete the existing session
+        UserSession.objects.filter(user_id=user.uuid).delete()
+        # Create a new session
+        session_object = UserSession.objects.create(**data)
+        response = HttpResponse(
+            json.dumps(
+                {
+                    'user_id': user.uuid,
+                        'login_success': True
+                }),
+                content_type="application/json",
+                status=200)
+        session_validity = datetime.utcnow()+timedelta(days=5)
+        response.set_cookie(key='sessonid', value=session_token, expires=session_validity, httponly=True)
+        return response
+    else:
+        return HttpResponse(
+            json.dumps(
+                {'login_success': False,
+                'reason': "Either Username / Password doesn't match"
+                }),
+            content_type="application/json",
+            status=400)
