@@ -41,3 +41,9 @@ class Group(models.Model):
 class GroupUserMapping(models.Model):
     group_id = models.ForeignKey(Group, on_delete=models.DO_NOTHING)
     user_id = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+
+
+class UserSession(models.Model):
+    user_id = models.IntegerField(primary_key=True)
+    token = models.TextField()
+    entry_timestamp = models.IntegerField()
