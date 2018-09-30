@@ -24,7 +24,7 @@ class ChatListViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     queryset = Message.objects.all()
-    authentication_classes = (CustomSessionAuthentication, CsrfExemptSessionAuthentication,)
+    authentication_classes = (CustomSessionAuthentication,)
     permission_classes = (IsAuthenticated,)
 
 class GroupListViewSet(viewsets.ModelViewSet):
@@ -61,10 +61,10 @@ def login(request):
         return HttpResponse(
             json.dumps(
                 {'login_success': False,
-                'reason': "username {} doesn't exist".format(username)
+                'reason': "Login failed. user {} doesn't exist".format(username)
                 }),
             content_type="application/json",
-            status=400)
+            status=200)
     if user.password == password:
         session_token = base64.b64encode(os.urandom(50)).decode("utf-8")
         data = {
@@ -80,18 +80,17 @@ def login(request):
             json.dumps(
                 {
                     'user_id': user.uuid,
-                        'login_success': True
+                    'login_success': True,
+                    'token': session_token
                 }),
                 content_type="application/json",
                 status=200)
-        session_validity = datetime.utcnow()+timedelta(days=5)
-        response.set_cookie(key='sessonid', value=session_token, expires=session_validity, httponly=True)
         return response
     else:
         return HttpResponse(
             json.dumps(
                 {'login_success': False,
-                'reason': "Either Username / Password doesn't match"
+                'reason': "Login failed. Wrong credentials"
                 }),
             content_type="application/json",
-            status=400)
+            status=200)

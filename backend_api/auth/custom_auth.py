@@ -7,7 +7,7 @@ import time
 class CustomSessionAuthentication(authentication.BaseAuthentication):
     epoch_delta_for_five_days = 432000
     def authenticate(self, request):
-        session_id = request.COOKIES.get('sessonid', '')
+        token = request.META.get('HTTP_AUTH_TOKEN', '')
         user_id = request.META.get('HTTP_USER_ID')
         if not user_id:
             return None
@@ -16,7 +16,7 @@ class CustomSessionAuthentication(authentication.BaseAuthentication):
             user  = User.objects.get(uuid=user_id)
             entry_timestamp = user_session.entry_timestamp
             current_timestamp = int(time.time())
-            if session_id != user_session.token:
+            if token != user_session.token:
                 return None
             if (current_timestamp - entry_timestamp) > self.epoch_delta_for_five_days:
                 return None
