@@ -6,11 +6,11 @@ import datetime
 class User(AbstractBaseUser):
     username = models.CharField(max_length=20, unique=True)
     password = models.CharField(max_length=20)
-    uuid = models.CharField(max_length=20, primary_key=True)
-    USERNAME_FIELD = 'uuid'
+    uuid = models.AutoField(primary_key=True)
+    USERNAME_FIELD = 'username'
 
 class Profile(models.Model):
-    uuid = models.OneToOneField(User, primary_key=True, on_delete=models.DO_NOTHING)
+    uuid = models.IntegerField(unique=True)
     username = models.CharField(max_length=20, null=False)
     full_name = models.CharField(max_length=50)
     avatar = models.CharField(max_length=50)

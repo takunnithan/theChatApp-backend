@@ -28,5 +28,6 @@ router.register(r'direct', views.DirectChatListViewSet, base_name='direct')
 urlpatterns = [
     url('admin/', admin.site.urls),
     url(r'^', include(router.urls)),
-    url('login/', views.login)
+    url('login/', views.login),
+    url('signup/', views.signup)
 ]

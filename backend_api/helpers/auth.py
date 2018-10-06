@@ -1,10 +1,14 @@
 from backend_api.helpers.custom_exceptions import EmptyField
 from django.http import HttpResponse
 import json
+import os, base64
+import time
+from backend_api.models import UserSession
 
 def field_sanitizer(field):
     if not field:
         raise EmptyField(msg='Empty Field')
+    return field
 
 
 def create_user_session(user):
@@ -41,7 +45,7 @@ def login_failure_response():
         status=200)
 
 
-def login_failure_no_user():
+def login_failure_no_user(username):
     return HttpResponse(
         json.dumps(
             {'login_success': False,
@@ -55,7 +59,7 @@ def signup_user_exist():
     return HttpResponse(
         json.dumps(
             {'login_success': False,
-            'reason': "Sign up failed. Please try again."
+            'reason': "User already exists."
             }),
         content_type="application/json",
         status=200)

@@ -5,14 +5,13 @@ from django.db.models import Q
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from django.http import HttpResponse
-import os, base64
-import time
+import time, datetime
 import json
 from datetime import datetime, timedelta
 from backend_api.auth.custom_auth import CustomSessionAuthentication, CsrfExemptSessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
-from backend_api.helpers.auth import create_user_session, login_success_response, login_failure_response, login_failure_no_user
+from backend_api.helpers.auth import create_user_session, login_success_response, login_failure_response, login_failure_no_user, field_sanitizer, signup_user_exist
 
 
 class ChatListViewSet(viewsets.ModelViewSet):
@@ -60,7 +59,7 @@ def login(request):
     try:
         user = User.objects.filter(username=username).get()
     except Exception as e:
-        return login_failure_no_user()
+        return login_failure_no_user(username)
 
     #TODO Need a better strategy for password verification -- Look for best practices
     if user.password == password:
@@ -83,26 +82,20 @@ def signup(request):
         user = User.objects.filter(username=username)
 
         if user:
-            raise Exception('Username already exist, Choose a different one')
+            return signup_user_exist()
 
         with transaction.atomic():
             # Create User
-            user = User()
-            user.username = username
-            user.password = password
-
+            data = {
+                'username': username,
+                'password': password
+            }
+            user = User.objects.create(**data)
             # Create profile
-            profile = Profile()
-            profile.username = username
-            profile.full_name = fullname
-            profile.uuid = user.uuid
-
-            user.save()
-            profile.save()
-
+            profile = Profile.objects.create(username=username,full_name=fullname, uuid=user.uuid, created_at=datetime.now())
         # login and return session token
         session_object = create_user_session(user)
         return login_success_response(user, session_object.token)
     
     except Exception as e:
-        return HttpResponse(str(e))
+        raise e
