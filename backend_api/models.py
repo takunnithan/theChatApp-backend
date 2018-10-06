@@ -2,6 +2,14 @@ from django.db import models
 from django.contrib.auth.base_user import AbstractBaseUser
 import datetime
 
+# TODO: Stop using on_delete=models.DO_NOTHING / CASCADE 
+    # Use a DB Deleted timestamp / custom func
+    # Might have to rewrite the serializers 
+
+    # If on_delete=models.DO_NOTHING  --> If a profile is deleted then the message serializers will fail
+
+    # on_delete=models.CASCADE  ---> If the user/profile is deleted , All of his messages will be deleted too.
+
 
 class User(AbstractBaseUser):
     username = models.CharField(max_length=20, unique=True)
@@ -10,7 +18,7 @@ class User(AbstractBaseUser):
     USERNAME_FIELD = 'username'
 
 class Profile(models.Model):
-    uuid = models.IntegerField(unique=True)
+    uuid = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     username = models.CharField(max_length=20, null=False)
     full_name = models.CharField(max_length=50)
     avatar = models.CharField(max_length=50)
@@ -25,8 +33,8 @@ class Message(models.Model):
 
 
 class UserChatMapping(models.Model):
-    user_one = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='user_one')
-    user_two = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='user_two')
+    user_one = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_one')
+    user_two = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_two')
     unique_hash =models.CharField(max_length=10)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -41,8 +49,8 @@ class Group(models.Model):
     group_name = models.TextField()
 
 class GroupUserMapping(models.Model):
-    group_id = models.ForeignKey(Group, on_delete=models.DO_NOTHING)
-    user_id = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    group_id = models.ForeignKey(Group, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
 class UserSession(models.Model):

@@ -7,7 +7,7 @@ from backend_api.models import UserSession
 
 def field_sanitizer(field):
     if not field:
-        raise EmptyField(msg='Empty Field')
+        raise EmptyField()
     return field
 
 
