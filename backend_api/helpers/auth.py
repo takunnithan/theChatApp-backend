@@ -1,4 +1,4 @@
-from custom_exceptions import EmptyField
+from backend_api.helpers.custom_exceptions import EmptyField
 from django.http import HttpResponse
 import json
 
@@ -9,15 +9,15 @@ def field_sanitizer(field):
 
 def create_user_session(user):
     session_token = base64.b64encode(os.urandom(50)).decode("utf-8")
-        data = {
-            'user_id': user.uuid,
-            'token': session_token,
-            'entry_timestamp': int(time.time())
-        }
-        # Delete the existing session
-        UserSession.objects.filter(user_id=user.uuid).delete()
-        # Create a new session
-        return UserSession.objects.create(**data)
+    data = {
+        'user_id': user.uuid,
+        'token': session_token,
+        'entry_timestamp': int(time.time())
+    }
+    # Delete the existing session
+    UserSession.objects.filter(user_id=user.uuid).delete()
+    # Create a new session
+    return UserSession.objects.create(**data)
 
 
 def login_success_response(user, session_token):
@@ -54,9 +54,8 @@ def login_failure_no_user():
 def signup_user_exist():
     return HttpResponse(
         json.dumps(
-            {'_success': False,
-            'reason': "Login failed. Wrong credentials"
+            {'login_success': False,
+            'reason': "Sign up failed. Please try again."
             }),
         content_type="application/json",
         status=200)
-

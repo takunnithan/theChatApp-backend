@@ -1,4 +1,2 @@
-Class EmptyField(Exception):
+class EmptyField(Exception):
     pass
-
-
