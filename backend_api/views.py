@@ -1,6 +1,6 @@
 from rest_framework import viewsets
 from backend_api.serializers import MessageSerializer, ChatSerializer, GroupSerializer, DirectChatSerializer
-from backend_api.models import Message, Group, GroupUserMapping, UserChatMapping, User, UserSession 
+from backend_api.models import Message, Group, GroupUserMapping, UserChatMapping, User, UserSession, Profile
 from django.db.models import Q
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
@@ -11,6 +11,8 @@ import json
 from datetime import datetime, timedelta
 from backend_api.auth.custom_auth import CustomSessionAuthentication, CsrfExemptSessionAuthentication
 from rest_framework.permissions import IsAuthenticated
+from django.db import transaction
+from backend_api.helpers.auth import create_user_session, login_success_response, login_failure_response, login_failure_no_user
 
 
 class ChatListViewSet(viewsets.ModelViewSet):
@@ -58,39 +60,49 @@ def login(request):
     try:
         user = User.objects.filter(username=username).get()
     except Exception as e:
-        return HttpResponse(
-            json.dumps(
-                {'login_success': False,
-                'reason': "Login failed. user {} doesn't exist".format(username)
-                }),
-            content_type="application/json",
-            status=200)
+        return login_failure_no_user()
+
+    #TODO Need a better strategy for password verification -- Look for best practices
     if user.password == password:
-        session_token = base64.b64encode(os.urandom(50)).decode("utf-8")
-        data = {
-            'user_id': user.uuid,
-            'token': session_token,
-            'entry_timestamp': int(time.time())
-        }
-        # Delete the existing session
-        UserSession.objects.filter(user_id=user.uuid).delete()
-        # Create a new session
-        session_object = UserSession.objects.create(**data)
-        response = HttpResponse(
-            json.dumps(
-                {
-                    'user_id': user.uuid,
-                    'login_success': True,
-                    'token': session_token
-                }),
-                content_type="application/json",
-                status=200)
-        return response
+        session_object = create_user_session(user)
+        return login_success_response(user, session_object.token)
     else:
-        return HttpResponse(
-            json.dumps(
-                {'login_success': False,
-                'reason': "Login failed. Wrong credentials"
-                }),
-            content_type="application/json",
-            status=200)
+        return login_failure_response()
+
+
+@api_view(['POST'])
+@authentication_classes(())
+@permission_classes(())
+def signup(request):
+    """Sign up """
+    try:
+        username = field_sanitizer(request.data.get('username'))
+        password = field_sanitizer(request.data.get('password'))
+        fullname = field_sanitizer(request.data.get('fullname'))
+
+        user = User.objects.filter(username=username)
+
+        if user:
+            raise Exception('Username already exist, Choose a different one')
+
+        with transaction.atomic():
+            # Create User
+            user = User()
+            user.username = username
+            user.password = password
+
+            # Create profile
+            profile = Profile()
+            profile.username = username
+            profile.full_name = fullname
+            profile.uuid = user.uuid
+
+            user.save()
+            profile.save()
+
+        # login and return session token
+        session_object = create_user_session(user)
+        return login_success_response(user, session_object.token)
+    
+    except Exception as e:
+        return HttpResponse(str(e))
