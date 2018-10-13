@@ -57,7 +57,8 @@ def login(request):
     password = request.data.get('password')
     # csrf_token = request.data.get('x-csrf')
     try:
-        user = User.objects.filter(username=username).get()
+        user = User.objects.filter(Q(username=username) &
+        Q(db_deleted_timestamp=None)).get()
     except Exception as e:
         return login_failure_no_user(username)
 

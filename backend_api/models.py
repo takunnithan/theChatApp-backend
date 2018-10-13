@@ -2,19 +2,11 @@ from django.db import models
 from django.contrib.auth.base_user import AbstractBaseUser
 import datetime
 
-# TODO: Stop using on_delete=models.DO_NOTHING / CASCADE 
-    # Use a DB Deleted timestamp / custom func
-    # Might have to rewrite the serializers 
-
-    # If on_delete=models.DO_NOTHING  --> If a profile is deleted then the message serializers will fail
-
-    # on_delete=models.CASCADE  ---> If the user/profile is deleted , All of his messages will be deleted too.
-
-
 class User(AbstractBaseUser):
     username = models.CharField(max_length=20, unique=True)
     password = models.CharField(max_length=20)
     uuid = models.AutoField(primary_key=True)
+    db_deleted_timestamp = models.IntegerField(null=True, blank=True)
     USERNAME_FIELD = 'username'
 
 class Profile(models.Model):
@@ -24,6 +16,7 @@ class Profile(models.Model):
     avatar = models.TextField()
     settings = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    db_deleted_timestamp = models.IntegerField(null=True, blank=True)
 
 class Message(models.Model):
     unique_hash = models.CharField(max_length=10)
