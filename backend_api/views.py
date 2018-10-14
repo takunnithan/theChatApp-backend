@@ -93,7 +93,7 @@ def signup(request):
             }
             user = User.objects.create(**data)
             # Create profile
-            profile = Profile.objects.create(username=username,full_name=fullname, uuid=user.uuid, created_at=datetime.now())
+            profile = Profile.objects.create(username=username,full_name=fullname, uuid=user, created_at=datetime.now())
         # login and return session token
         session_object = create_user_session(user)
         return login_success_response(user, session_object.token)
