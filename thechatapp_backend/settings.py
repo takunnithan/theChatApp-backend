@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'backend_api',
     'rest_framework',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -82,6 +83,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'thechatapp_backend.wsgi.application'
 
+ASGI_APPLICATION = 'thechatapp_backend.routing.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
