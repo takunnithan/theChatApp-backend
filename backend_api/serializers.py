@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Message, Group, UserChatMapping, User
+from .models import Message, Group, UserChatMapping, User, Profile
 
 class ChatSerializer(serializers.ModelSerializer):
     sender = serializers.CharField(source='sender.username')
@@ -10,6 +10,7 @@ class ChatSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.ModelSerializer):
+    sender = serializers.CharField(source='sender.username')
     class Meta:
         model = Message
         fields = '__all__'
@@ -18,6 +19,16 @@ class MessageSerializer(serializers.ModelSerializer):
 class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
+        fields = '__all__'
+
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = '__all__'
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
         fields = '__all__'
 
 

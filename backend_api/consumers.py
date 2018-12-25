@@ -2,6 +2,8 @@ from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 import json
 
+from backend_api.models import Message, Profile
+from backend_api.serializers import ChatSerializer
 
 # TODO
 #   1. Redis on 6379 ( may be a docker compose )
@@ -28,9 +30,36 @@ import json
 #   Group gets an event and broadcast it to all the clients connected --> `chat_message()`
 
 class ChatConsumer(WebsocketConsumer):
+
+    def create_message(self, message):
+        sender = Profile.objects.get(pk=message.get('sender'))
+        data = {
+            'unique_hash': message.get('unique_hash'),
+            'sender': sender,
+            'message': message.get('message')
+        }
+        new_message = Message.objects.create(**data)
+        serialized_message = ChatSerializer(new_message).data
+        serialized_message['command'] = 'new_message'
+        self.send_message_to_group(serialized_message)
+
+    def delete_message(self, data):
+        pass
+    
+    def edit_message(self, data):
+        pass
+    
+    def typing_notification(self, message):
+        user = Profile.objects.get(pk=message.get('user'))
+        data = {
+            'user': user.username,
+            'command': 'typing'
+        }
+        self.send_message_to_group(data)
+
     def connect(self):
         self.room_group_name = 'HGJ87L'     # This is the `general` channel 
-
+        
         # Join room group
         async_to_sync(self.channel_layer.group_add)(
             self.room_group_name,
@@ -49,16 +78,8 @@ class ChatConsumer(WebsocketConsumer):
     # Receive message from WebSocket
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        message = text_data_json['message']
+        self.commands_to_methods[text_data_json['command']](self, text_data_json)
 
-        # Send message to room group
-        async_to_sync(self.channel_layer.group_send)(
-            self.room_group_name,
-            {
-                'type': 'chat_message',
-                'message': message
-            }
-        )
 
     # Receive message from room group
     def chat_message(self, event):
@@ -68,3 +89,19 @@ class ChatConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps({
             'message': message
         }))
+
+    def send_message_to_group(self, message):
+        async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name,
+            {
+                'type': 'chat_message',
+                'message': message
+            }
+        )
+
+    commands_to_methods = {
+        'create_message': create_message,
+        'delete_message': delete_message,
+        'edit_message': edit_message,
+        'typing_status': typing_notification
+    }

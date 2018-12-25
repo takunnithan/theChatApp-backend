@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-from backend_api.serializers import MessageSerializer, ChatSerializer, GroupSerializer, DirectChatSerializer
+from backend_api.serializers import MessageSerializer, ChatSerializer, GroupSerializer, DirectChatSerializer, ProfileSerializer
 from backend_api.models import Message, Group, GroupUserMapping, UserChatMapping, User, UserSession, Profile
 from django.db.models import Q
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -47,6 +47,15 @@ class DirectChatListViewSet(viewsets.ModelViewSet):
                 Q(user_one=self.request.GET.get('user_id')) |
                 Q(user_two=self.request.GET.get('user_id')))
         return user_chat_mappings
+
+
+
+@api_view(['GET'])
+@authentication_classes((CustomSessionAuthentication))
+@permission_classes((IsAuthenticated))
+def profile(request):
+    pass
+    
 
 
 @api_view(['POST'])

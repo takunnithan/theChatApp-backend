@@ -24,6 +24,7 @@ router.register(r'chat/(?P<message_hash>[A-Z 0-9]+)', views.ChatListViewSet, bas
 router.register(r'messages', views.MessageViewSet, base_name='messages')
 router.register(r'group', views.GroupListViewSet, base_name='groups')
 router.register(r'direct', views.DirectChatListViewSet, base_name='direct')
+router.register(r'profile', views.DirectChatListViewSet, base_name='profile')
 
 urlpatterns = [
     url('admin/', admin.site.urls),
