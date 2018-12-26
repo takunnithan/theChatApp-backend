@@ -31,6 +31,7 @@ from backend_api.serializers import ChatSerializer
 
 class ChatConsumer(WebsocketConsumer):
 
+    
     def create_message(self, message):
         sender = Profile.objects.get(pk=message.get('sender'))
         data = {
@@ -58,14 +59,19 @@ class ChatConsumer(WebsocketConsumer):
         self.send_message_to_group(data)
 
     def connect(self):
-        self.room_group_name = 'HGJ87L'     # This is the `general` channel 
-        
+        USER_CONFIG_GROUP = 'user_{}'
+        group_name = self.scope['url_route']['kwargs']['room_name']
+        user_id = self.scope['url_route']['kwargs']['user_id']
+        self.room_group_name = 'group_{}'.format(group_name)
+        if group_name == 'config':
+            self.room_group_name = USER_CONFIG_GROUP.format(user_id)
+        print(self.room_group_name)
+        print(self.channel_name)        
         # Join room group
         async_to_sync(self.channel_layer.group_add)(
             self.room_group_name,
             self.channel_name
         )
-
         self.accept()
 
     def disconnect(self, close_code):
