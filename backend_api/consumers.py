@@ -1,9 +1,9 @@
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 import json
-
-from backend_api.models import Message, Profile
+from backend_api.models import Message, Group, GroupUserMapping, UserChatMapping, User, UserSession, Profile
 from backend_api.serializers import ChatSerializer
+from django.db.models import Q
 
 # TODO
 #   1. Redis on 6379 ( may be a docker compose )
@@ -31,7 +31,6 @@ from backend_api.serializers import ChatSerializer
 
 class ChatConsumer(WebsocketConsumer):
 
-    
     def create_message(self, message):
         sender = Profile.objects.get(pk=message.get('sender'))
         data = {
@@ -54,32 +53,38 @@ class ChatConsumer(WebsocketConsumer):
         user = Profile.objects.get(pk=message.get('user'))
         data = {
             'user': user.username,
-            'command': 'typing'
+            'command': 'typing',
+            'unique_hash': message.get('unique_hash')
         }
         self.send_message_to_group(data)
 
     def connect(self):
         USER_CONFIG_GROUP = 'user_{}'
-        group_name = self.scope['url_route']['kwargs']['room_name']
-        user_id = self.scope['url_route']['kwargs']['user_id']
-        self.room_group_name = 'group_{}'.format(group_name)
-        if group_name == 'config':
-            self.room_group_name = USER_CONFIG_GROUP.format(user_id)
-        print(self.room_group_name)
-        print(self.channel_name)        
+        user_id = self.scope['url_route']['kwargs']['user_id']  
+        groups_to_connect = []
+        # Get the user direct chat hash
+        groups_to_connect.extend(get_direct_hash_list_for_user(user_id))
+        # Get user group chat hash
+        groups_to_connect.extend(get_group_hash_list_for_user(user_id))
+        # Connect to all direct / groups 
+        self.room_groups = []
         # Join room group
-        async_to_sync(self.channel_layer.group_add)(
-            self.room_group_name,
-            self.channel_name
-        )
+        for group in groups_to_connect:
+            room_group_name = 'group_{}'.format(group)
+            self.room_groups.append(room_group_name)
+            async_to_sync(self.channel_layer.group_add)(
+                room_group_name,
+                self.channel_name
+            )
         self.accept()
 
     def disconnect(self, close_code):
         # Leave room group
-        async_to_sync(self.channel_layer.group_discard)(
-            self.room_group_name,
-            self.channel_name
-        )
+        for room_group_name in self.room_groups:
+            async_to_sync(self.channel_layer.group_discard)(
+                room_group_name,
+                self.channel_name
+            )
 
     # Receive message from WebSocket
     def receive(self, text_data):
@@ -98,7 +103,7 @@ class ChatConsumer(WebsocketConsumer):
 
     def send_message_to_group(self, message):
         async_to_sync(self.channel_layer.group_send)(
-            self.room_group_name,
+            'group_{}'.format(message.get('unique_hash')),
             {
                 'type': 'chat_message',
                 'message': message
@@ -111,3 +116,15 @@ class ChatConsumer(WebsocketConsumer):
         'edit_message': edit_message,
         'typing_status': typing_notification
     }
+
+
+def get_group_hash_list_for_user(user_id):
+    group_ids = GroupUserMapping.objects.filter(user_id=user_id).values_list('group_id')
+    group_hash_list = Group.objects.filter(id__in=group_ids).values_list('unique_hash') 
+    return [i[0] for i in group_hash_list]
+
+def get_direct_hash_list_for_user(user_id):
+    direct_chats = UserChatMapping.objects.filter(
+            Q(user_one=user_id) |
+            Q(user_two=user_id)).values_list('unique_hash')    
+    return [i[0] for i in direct_chats]
