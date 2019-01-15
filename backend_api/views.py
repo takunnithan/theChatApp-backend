@@ -5,6 +5,7 @@ from django.db.models import Q
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from django.http import HttpResponse
+from django.http.request import QueryDict
 import time, datetime
 import json
 from datetime import datetime, timedelta
@@ -109,3 +110,16 @@ def signup(request):
     
     except Exception as e:
         raise e
+
+
+@api_view(['GET'])
+@authentication_classes((CustomSessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def user_search(request):
+    query_dict = QueryDict(query_string=request.META.get('QUERY_STRING'))
+    search_qs = Profile.objects.filter(username__startswith=query_dict.get('q'))
+    results = []
+    for r in search_qs:
+        results.append(r.username)
+    resp = json.dumps(results)
+    return HttpResponse(resp, content_type='application/json')

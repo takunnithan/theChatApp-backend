@@ -30,5 +30,6 @@ urlpatterns = [
     url('admin/', admin.site.urls),
     url(r'^', include(router.urls)),
     url('login/', views.login),
-    url('signup/', views.signup)
+    url('signup/', views.signup),
+    url('search/user', views.user_search)
 ]
