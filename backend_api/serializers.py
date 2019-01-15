@@ -34,7 +34,10 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 class DirectChatSerializer(serializers.BaseSerializer):
     def to_representation(self, obj):
-        requested_username = User.objects.filter(uuid=self.context['request'].GET.get('user_id')).first().username
+        user_id = self.context['request'].GET.get('user_id') 
+        if not user_id:
+            user_id = self.context['request'].data.get('user_id')
+        requested_username = User.objects.filter(uuid=user_id).first().username
         username = obj.user_two.username if obj.user_one.username == requested_username else obj.user_one.username
         return {
             'username': username,

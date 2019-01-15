@@ -30,6 +30,7 @@ class UserChatMapping(models.Model):
     user_two = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='user_two')
     unique_hash =models.CharField(max_length=10)
     created_at = models.DateTimeField(auto_now_add=True)
+    # Add a field to check if the other user accepted the invite
 
     class Meta:
         unique_together = ('user_one', 'user_two',)

@@ -13,6 +13,7 @@ from backend_api.auth.custom_auth import CustomSessionAuthentication, CsrfExempt
 from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
 from backend_api.helpers.auth import create_user_session, login_success_response, login_failure_response, login_failure_no_user, field_sanitizer, signup_user_exist
+from backend_api.helpers.common import create_unique_hash
 
 
 class ChatListViewSet(viewsets.ModelViewSet):
@@ -48,8 +49,21 @@ class DirectChatListViewSet(viewsets.ModelViewSet):
                 Q(user_one=self.request.GET.get('user_id')) |
                 Q(user_two=self.request.GET.get('user_id')))
         return user_chat_mappings
-
-
+    
+    def create(self, request):
+        sender = User.objects.get(pk=self.request.data.get('user_id'))
+        recipient = User.objects.get(pk=self.request.data.get('recipient'))
+        user_chat_mappings = UserChatMapping.objects.filter(
+                Q(user_one=sender, user_two=recipient) |
+                Q(user_one=recipient, user_two=sender))
+        if user_chat_mappings:
+            res = self.get_serializer(user_chat_mappings[0]).data
+            return Response(res)
+        else:
+            with transaction.atomic():
+                obj = UserChatMapping.objects.create(user_one=sender, user_two=recipient, unique_hash=create_unique_hash(5))
+            res = self.get_serializer(obj).data
+            return Response(res)
 
 @api_view(['GET'])
 @authentication_classes((CustomSessionAuthentication))
