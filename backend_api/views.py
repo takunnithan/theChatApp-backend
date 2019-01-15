@@ -120,6 +120,9 @@ def user_search(request):
     search_qs = Profile.objects.filter(username__startswith=query_dict.get('q'))
     results = []
     for r in search_qs:
-        results.append(r.username)
+        results.append({
+            'user_name': r.username,
+            'user_id': r.uuid.uuid
+            })
     resp = json.dumps(results)
     return HttpResponse(resp, content_type='application/json')
