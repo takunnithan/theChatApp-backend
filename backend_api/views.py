@@ -140,3 +140,37 @@ def user_search(request):
             })
     resp = json.dumps(results)
     return HttpResponse(resp, content_type='application/json')
+
+
+@api_view(['GET'])
+@authentication_classes((CustomSessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def group_search(request):
+    query_dict = QueryDict(query_string=request.META.get('QUERY_STRING'))
+    search_qs = Group.objects.filter(group_name__startswith=query_dict.get('q'))
+    results = []
+    for r in search_qs:
+        results.append({
+            'channel_name': r.group_name,
+            'unique_hash': r.unique_hash
+            })
+    resp = json.dumps(results)
+    return HttpResponse(resp, content_type='application/json')
+
+
+
+@api_view(['POST'])
+@authentication_classes((CustomSessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def join_group(request):
+    # TODO: Users can join a group by themself, not by others, 
+    # Right Now any logged in user can add others to a group.
+    sender = User.objects.get(pk=request.data.get('user_id'))
+    group_unique_hash = request.data.get('unique_hash')
+    group = Group.objects.filter(unique_hash=group_unique_hash).get()
+    group_mapping = GroupUserMapping.objects.filter(group_id=group.id, user_id=sender.uuid)
+    if not group_mapping:
+        # Create Group User Mapping
+        GroupUserMapping.objects.create(group_id=group, user_id=sender)
+    res = GroupSerializer(group).data
+    return Response(res)

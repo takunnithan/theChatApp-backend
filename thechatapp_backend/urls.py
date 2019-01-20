@@ -31,5 +31,7 @@ urlpatterns = [
     url(r'^', include(router.urls)),
     url('login/', views.login),
     url('signup/', views.signup),
-    url('search/user', views.user_search)
+    url('search/user', views.user_search),
+    url('search/channel', views.group_search),
+    url('group/join', views.join_group)
 ]
