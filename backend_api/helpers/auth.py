@@ -30,7 +30,8 @@ def login_success_response(user, session_token):
             {
                 'user_id': user.uuid,
                 'login_success': True,
-                'token': session_token
+                'token': session_token,
+                'username': user.username
             }),
             content_type="application/json",
             status=200)
