@@ -5,6 +5,7 @@ from django.db.models import Q
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from django.http import HttpResponse
+from rest_framework import status
 from django.http.request import QueryDict
 import time, datetime
 import json
@@ -29,6 +30,13 @@ class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all()
     authentication_classes = (CustomSessionAuthentication,)
     permission_classes = (IsAuthenticated,)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.sender.uuid.uuid != int(self.request.META.get('HTTP_USER_ID')):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class GroupListViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
