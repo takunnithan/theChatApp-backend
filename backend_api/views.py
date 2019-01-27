@@ -31,12 +31,17 @@ class MessageViewSet(viewsets.ModelViewSet):
     authentication_classes = (CustomSessionAuthentication,)
     permission_classes = (IsAuthenticated,)
 
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.sender.uuid.uuid != int(self.request.META.get('HTTP_USER_ID')):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         if instance.sender.uuid.uuid != int(self.request.META.get('HTTP_USER_ID')):
             return Response(status=status.HTTP_403_FORBIDDEN)
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return super().destroy(request, *args, **kwargs)
 
 class GroupListViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
