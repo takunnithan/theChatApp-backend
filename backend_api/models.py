@@ -2,6 +2,13 @@ from django.db import models
 from django.contrib.auth.base_user import AbstractBaseUser
 import datetime
 
+# TODO: Give credits for avatar pics
+# <div>Icons made by 
+# <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> 
+# from <a href="https://www.flaticon.com/" title="Flaticon">
+# www.flaticon.com</a> is licensed by 
+# <a href="http://creativecommons.org/licenses/by/3.0/"  title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
+
 class User(AbstractBaseUser):
     username = models.CharField(max_length=20, unique=True)
     password = models.CharField(max_length=20)
@@ -13,7 +20,7 @@ class Profile(models.Model):
     uuid = models.OneToOneField(User, on_delete=models.DO_NOTHING, primary_key=True)
     username = models.CharField(max_length=20, null=False)
     full_name = models.CharField(max_length=50)
-    avatar = models.TextField()
+    avatar = models.TextField(default='https://image.flaticon.com/icons/svg/149/149071.svg')
     settings = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     db_deleted_timestamp = models.IntegerField(null=True, blank=True)

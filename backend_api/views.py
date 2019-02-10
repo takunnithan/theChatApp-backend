@@ -15,6 +15,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
 from backend_api.helpers.auth import create_user_session, login_success_response, login_failure_response, login_failure_no_user, field_sanitizer, signup_user_exist
 from backend_api.helpers.common import create_unique_hash
+import bcrypt
 
 
 class ChatListViewSet(viewsets.ModelViewSet):
@@ -98,9 +99,7 @@ def login(request):
         Q(db_deleted_timestamp=None)).get()
     except Exception as e:
         return login_failure_no_user(username)
-
-    #TODO Need a better strategy for password verification -- Look for best practices
-    if user.password == password:
+    if bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
         session_object = create_user_session(user)
         return login_success_response(user, session_object.token)
     else:
@@ -124,9 +123,10 @@ def signup(request):
 
         with transaction.atomic():
             # Create User
+            password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
             data = {
                 'username': username,
-                'password': password
+                'password': password.decode()
             }
             user = User.objects.create(**data)
             # Create profile
