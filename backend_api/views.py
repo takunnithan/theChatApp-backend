@@ -131,6 +131,8 @@ def signup(request):
             user = User.objects.create(**data)
             # Create profile
             profile = Profile.objects.create(username=username,full_name=fullname, uuid=user, created_at=datetime.now())
+            # Create personal chat
+            personal_chat = UserChatMapping.objects.create(user_one=user, user_two=user, unique_hash=create_unique_hash(5))
         # login and return session token
         session_object = create_user_session(user)
         return login_success_response(user, session_object.token)

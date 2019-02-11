@@ -3,7 +3,8 @@ from django.http import HttpResponse
 import json
 import os, base64
 import time
-from backend_api.models import UserSession
+from backend_api.models import UserSession, UserChatMapping
+from django.db.models import Q
 
 def field_sanitizer(field):
     if not field:
@@ -25,13 +26,15 @@ def create_user_session(user):
 
 
 def login_success_response(user, session_token):
+    personal_chat = UserChatMapping.objects.filter(Q(user_one=user, user_two=user))[0]
     return HttpResponse(
         json.dumps(
             {
                 'user_id': user.uuid,
                 'login_success': True,
                 'token': session_token,
-                'username': user.username
+                'username': user.username,
+                'personal_chat_hash': personal_chat.unique_hash
             }),
             content_type="application/json",
             status=200)
